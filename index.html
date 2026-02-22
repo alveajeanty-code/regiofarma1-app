@@ -23,6 +23,15 @@
         th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
         .btn-del { color: var(--rojo); border: none; background: none; font-weight: bold; cursor: pointer; }
+        
+        #nombre {
+        text-transform: uppercase;
+        }
+
+        /* Opcional: Si quieres que el marcador de posición también se vea en mayúsculas */
+        #nombre::placeholder {
+            text-transform: uppercase;
+        }
     </style>
     <link rel="manifest" href="manifest.json">
 </head>
@@ -38,7 +47,7 @@
 
     <h3>1. Datos de Venta y Entrega</h3>
     <label>Nombre del Cliente:</label>
-    <input type="text" id="nombre" placeholder="Nombre o Razón Social">
+    <input type="text" id="nombre" placeholder="RAZÓN SOCIAL" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '').toUpperCase()">
     
     <div class="flex-row">
         <div>
@@ -67,7 +76,7 @@
 
     <h3>2. Registro de Insumos</h3>
     <label>Descripción del Producto:</label>
-    <input type="text" id="desc" placeholder="Ej: IBUPROFENO 800mg. con 10 Tabletas">
+    <input type="text" id="desc" placeholder="Ej: IBUPROFENO 800mg. con 10 Tabletas" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '').toUpperCase()">
 
     <div class="flex-row">
         <div>
