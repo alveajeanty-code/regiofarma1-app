@@ -109,52 +109,53 @@
 </div>
 
 <script>
+    // VARIABLES GLOBALES
     let carrito = [];
     const MI_TELEFONO = "528119939771";
     const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwCkgCf6Z4wf1tIc4HuU3KcK5wQhtwmF9BOTFP1xNCYA1nDqSGI4C0_8Czs5hxLSfG_BA/exec"; 
     const API_KEY_IMGBB = "691c99ca91538f67d4731f19c6a864b3"; 
 
+    // Al cargar la página
     window.onload = function() {
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_entrega').value = hoy;
-    }
-    function nuevoPedido() {
-        if (confirm("¿ESTÁS SEGURO DE QUE DESEAS BORRAR TODO EL PEDIDO ACTUAL Y COMENZAR DE NUEVO?")) {
-            // 1. Vaciar el arreglo del carrito
-            carrito = [];
+    };
 
-            // 2. Limpiar los campos del Cliente
+    // --- FUNCIÓN BORRAR TODO (CORREGIDA) ---
+    function nuevoPedido() {
+        if (confirm("¿DESEAS BORRAR TODO EL PEDIDO Y COMENZAR DE NUEVO?")) {
+            // 1. Limpiar carrito
+            carrito = [];
+            
+            // 2. Limpiar inputs de cliente
             document.getElementById('nombre').value = "";
             document.getElementById('tel_cliente').value = "";
             document.getElementById('direccion').value = "";
-            // Opcional: resetear método de pago al primero
             document.getElementById('metodoPago').selectedIndex = 0;
-
-            // 3. Limpiar los campos de Insumos
+            
+            // 3. Limpiar inputs de insumos
             document.getElementById('unidades').value = "";
             document.getElementById('desc').value = "";
             document.getElementById('marca').value = "";
             document.getElementById('foto').value = "";
             
-            // 4. Limpiar mensajes de estado
+            // 4. Limpiar estatus de foto
             const statusFoto = document.getElementById('status-foto');
             if (statusFoto) {
                 statusFoto.innerText = "Cámara o Galería";
                 statusFoto.style.color = "#666";
             }
 
-            // 5. Actualizar la tabla para que se vea vacía
+            // 5. Refrescar tabla y poner foco
             actualizarTabla();
-
-            // 6. Regresar el cursor al inicio
             document.getElementById('nombre').focus();
-            
-            alert("SISTEMA REINICIADO: LISTO PARA NUEVO PEDIDO");
         }
     }
+
+    // --- FUNCIÓN SUBIR FOTO ---
     async function subirFotoIndividual() {
         const fileInput = document.getElementById('foto');
-        if (fileInput.files.length === 0) return "Sin foto";
+        if (!fileInput || fileInput.files.length === 0) return "Sin foto";
 
         const statusMsg = document.getElementById('status-foto');
         statusMsg.innerText = "⏳ SUBIENDO FOTO...";
@@ -181,14 +182,14 @@
         return "Sin foto";
     }
 
-    // Añadir al carrito con Presentación
+    // --- AÑADIR AL CARRITO ---
     async function agregarConFoto() {
-        const desc = document.getElementById('desc').value;
-        const unidades = document.getElementById('unidades').value;
-        const marca = document.getElementById('marca').value || "S/M";
-        const pres = document.getElementById('presentacion').value; // Asegúrate de tener este ID en el select
+        const descInput = document.getElementById('desc');
+        const unidadesInput = document.getElementById('unidades');
+        const marcaInput = document.getElementById('marca');
+        const presInput = document.getElementById('presentacion');
 
-        if (!desc || !unidades) {
+        if (!descInput.value || !unidadesInput.value) {
             alert("POR FAVOR LLENA DESCRIPCIÓN Y UNIDADES");
             return;
         }
@@ -196,52 +197,55 @@
         const linkFoto = await subirFotoIndividual();
 
         carrito.push({
-            unidades: unidades,
-            desc: desc,
-            marca: marca,
-            presentacion: pres,
+            unidades: unidadesInput.value,
+            desc: descInput.value,
+            marca: marcaInput.value || "S/M",
+            presentacion: presInput.value,
             foto: linkFoto
         });
 
         actualizarTabla();
 
-        // Limpiar campos de insumo
-        document.getElementById('desc').value = "";
-        document.getElementById('unidades').value = "";
-        document.getElementById('marca').value = "";
+        // Limpiar solo campos de producto
+        descInput.value = "";
+        unidadesInput.value = "";
+        marcaInput.value = "";
         document.getElementById('foto').value = "";
         document.getElementById('status-foto').innerText = "Cámara o Galería";
+        document.getElementById('status-foto').style.color = "#666";
 
         if (confirm("¿DESEAS AGREGAR OTRO PRODUCTO?")) {
-            document.getElementById('unidades').focus();
+            unidadesInput.focus();
         }
     }
 
-    // Tabla con botón de eliminar
+    // --- ACTUALIZAR TABLA ---
     function actualizarTabla() {
         const cuerpo = document.getElementById('tablaCuerpo');
+        if (!cuerpo) return;
         cuerpo.innerHTML = "";
         carrito.forEach((item, index) => {
-            const fotoIcono = item.foto.includes("http") ? "✅" : "❌";
+            const fotoIcono = (item.foto && item.foto.includes("http")) ? "✅" : "❌";
             cuerpo.innerHTML += `
                 <tr>
                     <td>${item.unidades}</td>
                     <td>${item.desc}<br><small>${item.presentacion} | ${item.marca}</small></td>
                     <td>${fotoIcono}</td>
-                    <td><button class="btn-del" onclick="eliminar(${index})">X</button></td>
+                    <td><button type="button" class="btn-del" onclick="eliminar(${index})">X</button></td>
                 </tr>
             `;
         });
     }
 
+    // --- ELIMINAR ITEM ---
     function eliminar(index) {
-        if(confirm("¿Eliminar este producto de la lista?")) {
+        if(confirm("¿Eliminar este producto?")) {
             carrito.splice(index, 1);
             actualizarTabla();
         }
     }
 
-    // Enviar datos desglosados
+    // --- ENVIAR ---
     async function enviar() {
         const cliente = document.getElementById('nombre').value;
         const tel = document.getElementById('tel_cliente').value;
@@ -250,23 +254,21 @@
         const fecha = document.getElementById('fecha_entrega').value;
 
         if (!cliente || carrito.length === 0) {
-            alert("FALTEN DADES O LA LLISTA ESTÀ BUIDA");
+            alert("DATOS INCOMPLETOS O LISTA VACÍA");
             return;
         }
 
-        // --- GENERACIÓ DEL FOLIO AMB INICIALS ---
+        // Folio con iniciales
         const iniciales = cliente.trim().split(/\s+/).map(n => n[0]).join('').toUpperCase().substring(0, 3);
         const ahora = new Date();
-        const codigoPedido = "RF-" + iniciales + "-" + 
-                            ahora.getFullYear() + 
-                            (ahora.getMonth() + 1).toString().padStart(2, '0') + 
-                            ahora.getDate().toString().padStart(2, '0') + "-" + 
-                            ahora.getHours().toString().padStart(2, '0') + 
-                            ahora.getMinutes().toString().padStart(2, '0');
+        const codigoPedido = "RF-" + iniciales + "-" + ahora.getFullYear() + 
+                             (ahora.getMonth() + 1).toString().padStart(2, '0') + 
+                             ahora.getDate().toString().padStart(2, '0') + "-" + 
+                             ahora.getHours().toString().padStart(2, '0') + 
+                             ahora.getMinutes().toString().padStart(2, '0');
 
-        // Estructura de dades per a Google Sheets
         const datosParaSheet = {
-            idPedido: codigoPedido, // Aquest nom ha de ser igual al de l'script
+            idPedido: codigoPedido,
             cliente: cliente,
             tel: tel,
             dir: dir,
@@ -275,37 +277,33 @@
             productos: carrito 
         };
 
-        // Enviament a Google Sheets
         try {
             fetch(URL_GOOGLE_SHEETS, {
                 method: 'POST',
                 mode: 'no-cors',
                 body: JSON.stringify(datosParaSheet)
             });
-        } catch (e) {
-            console.error("Error enviant a Sheets", e);
-        }
+        } catch (e) { console.error(e); }
 
-        // --- WHATSAPP ---
+        // WhatsApp
         let msg = `🚀 *PEDIDO: ${codigoPedido}*\n`;
         msg += "--------------------------\n";
         msg += `*CLIENTE:* ${cliente}\n`;
         msg += "--------------------------\n";
-
         carrito.forEach((i, idx) => {
-            msg += `\n📦 *ITEM ${idx+1}:*\n`;
-            msg += `• ${i.unidades} ${i.presentacion} - ${i.desc} (${i.marca})\n`;
-            if(i.foto && i.foto.startsWith("http")) msg += `🔗 FOTO: ${i.foto}\n`;
+            msg += `\n📦 *ITEM ${idx+1}:*\n• ${i.unidades} ${i.presentacion} - ${i.desc} (${i.marca})\n`;
+            if(i.foto && i.foto.includes("http")) msg += `🔗 FOTO: ${i.foto}\n`;
         });
 
-        const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
-        window.open(urlWA, '_blank');
+        window.open("https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg), '_blank');
+        
         setTimeout(() => {
-            if(confirm("¿EL PEDIDO SE ENVIÓ CORRECTAMENTE? ¿DESEAS LIMPIAR EL FORMULARIO PARA OTRO CLIENTE?")) {
+            if(confirm("¿SE ENVIÓ EL PEDIDO? ¿LIMPIAR TODO PARA UN NUEVO CLIENTE?")) {
                 nuevoPedido();
             }
-        }, 2000);       
+        }, 3000);       
     }
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Error SW', err));
     }
