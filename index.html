@@ -221,32 +221,48 @@
             return;
         }
 
+        // --- GENERACIÓN DEL FOLIO INTELIGENTE ---
+        // Extraemos las iniciales del nombre del cliente
+        const iniciales = cliente.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 3);
+        
+        const ahora = new Date();
+        const codigoPedido = "RF-" + iniciales + "-" + 
+                            ahora.getFullYear() + 
+                            (ahora.getMonth() + 1).toString().padStart(2, '0') + 
+                            ahora.getDate().toString().padStart(2, '0') + "-" + 
+                            ahora.getHours().toString().padStart(2, '0') + 
+                            ahora.getMinutes().toString().padStart(2, '0');
+
+        // Estructura para Google Sheets
         const datosParaSheet = {
+            idPedido: codigoPedido, 
             cliente: cliente,
             tel: tel,
             dir: dir,
             fechaEntrega: fecha,
             pago: pago,
-            productos: carrito // Enviamos el array para que el script lo desglose
+            productos: carrito 
         };
 
+        // Envío a Google
         fetch(URL_GOOGLE_SHEETS, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datosParaSheet)
         });
 
-        // WhatsApp resumen
-        let msg = "🚀 *NUEVO PEDIDO - REGIOFARMA*\n";
+        // --- WHATSAPP CON FOLIO ---
+        let msg = `🚀 *PEDIDO: ${codigoPedido}*\n`;
         msg += "--------------------------\n";
         msg += `*CLIENTE:* ${cliente}\n`;
+        msg += `*PAGO:* ${pago}\n`;
         msg += "--------------------------\n";
+        msg += "*DETALLE DEL PEDIDO:*\n";
 
         carrito.forEach((i, idx) => {
             msg += `\n📦 *ITEM ${idx+1}:*\n`;
-            msg += `• CANT: ${i.unidades} ${i.presentacion}\n`;
-            msg += `• PROD: ${i.desc} (${i.marca})\n`;
-            if(i.foto.startsWith("http")) msg += `🔗 FOTO: ${i.foto}\n`;
+            msg += `• ${i.unidades} ${i.presentacion} - ${i.desc} (${i.marca})\n`;
+            if(i.foto && i.foto.startsWith("http")) msg += `🔗 FOTO: ${i.foto}\n`;
         });
 
         const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
