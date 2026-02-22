@@ -113,6 +113,11 @@
         </thead>
         <tbody id="tablaCuerpo"></tbody>
     </table>
+    <label>Foto de Receta o Producto (Opcional):</label>
+    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed var(--azul); text-align: center;">
+        <input type="file" id="foto" accept="image/*" capture="camera" style="font-size: 12px;">
+        <p id="status-foto" style="font-size: 11px; color: var(--gris); margin-top: 5px;">Puedes tomar una foto o elegir de la galería</p>
+    </div>
 
     <button type="button" class="btn-send" onclick="enviar()">ENVIAR PEDIDO POR WHATSAPP</button>
     <button type="button" class="btn-reset" onclick="nuevoPedido()">BORRAR TODO</button>
@@ -179,7 +184,44 @@
         }
     }
 
-async function enviar() {
+// --- FUNCIÓN PARA SUBIR FOTO A IMGBB ---
+    async function subirFoto() {
+        const fileInput = document.getElementById('foto');
+        if (fileInput.files.length === 0) return "No se adjuntó foto";
+
+        const statusMsg = document.getElementById('status-foto');
+        statusMsg.innerText = "⏳ SUBIENDO IMAGEN... ESPERA.";
+        statusMsg.style.color = "orange";
+
+        // REEMPLAZA ESTO CON TU LLAVE REAL DE IMGBB
+        const API_KEY = "691c99ca91538f67d4731f19c6a864b3"; 
+        
+        const formData = new FormData();
+        formData.append("image", fileInput.files[0]);
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+            
+            if(result.success) {
+                statusMsg.innerText = "✅ FOTO LISTA";
+                statusMsg.style.color = "green";
+                return result.data.url;
+            } else {
+                return "Error en subida";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            statusMsg.innerText = "❌ ERROR DE CONEXIÓN";
+            return "Error de red";
+        }
+    }
+
+    // --- FUNCIÓN ENVIAR MEJORADA ---
+    async function enviar() {
         const cliente = document.getElementById('nombre').value;
         const tel = document.getElementById('tel_cliente').value;
         const dir = document.getElementById('direccion').value;
@@ -187,15 +229,18 @@ async function enviar() {
         const fecha = document.getElementById('fecha_entrega').value;
 
         if (!cliente || carrito.length === 0) {
-            alert("Faltan datos críticos (Nombre del Cliente o Productos en la lista)");
+            alert("FALTAN DATOS CRÍTICOS (CLIENTE O PRODUCTOS)");
             return;
         }
 
-        // --- PARTE 1: GUARDAR EN GOOGLE SHEETS ---
-        // Preparamos un resumen del pedido para la columna de la hoja
-        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} [${i.marca}]`).join(" / ");
+        // 1. Subir foto (si hay una seleccionada)
+        const linkFoto = await subirFoto();
 
-        const urlScript = "https://script.google.com/macros/s/AKfycbwCkgCf6Z4wf1tIc4HuU3KcK5wQhtwmF9BOTFP1xNCYA1nDqSGI4C0_8Czs5hxLSfG_BA/exec"; // <--- PEGA TU URL AQUÍ
+        // 2. Preparar datos para Google Sheets
+        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} [${i.marca}]`).join(" / ");
+        
+        // REEMPLAZA CON TU URL DE GOOGLE APPS SCRIPT
+        const urlScript = "https://script.google.com/macros/s/AKfycbwCkgCf6Z4wf1tIc4HuU3KcK5wQhtwmF9BOTFP1xNCYA1nDqSGI4C0_8Czs5hxLSfG_BA/exec"; 
 
         const datosParaSheet = {
             cliente: cliente,
@@ -203,38 +248,39 @@ async function enviar() {
             dir: dir,
             fecha: fecha,
             pago: pago,
-            pedido: resumenPedido
+            pedido: resumenPedido + " | LINK FOTO: " + linkFoto
         };
 
-        // Enviamos a Google Sheets en segundo plano
         fetch(urlScript, {
             method: 'POST',
-            mode: 'no-cors', // Importante para Google Scripts
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'no-cors',
             body: JSON.stringify(datosParaSheet)
         });
 
-        // --- PARTE 2: ENVIAR POR WHATSAPP ---
-        let msg = "NUEVO PEDIDO - REGIOFARMA\n";
+        // 3. Preparar mensaje de WhatsApp
+        let msg = "🚀 *NUEVO PEDIDO - REGIOFARMA*\n";
         msg += "--------------------------\n";
-        msg += "CLIENTE: " + cliente + "\n";
-        msg += "TEL: " + tel + "\n";
-        msg += "DIR: " + dir + "\n";
-        msg += "ENTREGA: " + fecha + "\n";
-        msg += "PAGO: " + pago + "\n";
+        msg += "*CLIENTE:* " + cliente + "\n";
+        msg += "*FECHA:* " + fecha + "\n";
+        msg += "*PAGO:* " + pago + "\n";
+        
+        if (linkFoto.includes("http")) {
+            msg += "*📸 FOTO RECETA:* " + linkFoto + "\n";
+        }
+        
         msg += "--------------------------\n";
-        msg += "LISTADO:\n\n";
+        msg += "*DETALLE:* \n";
 
         carrito.forEach(i => {
-            msg += i.unidades + " | " + i.desc + " | " + i.pres + " | " + i.marca + "\n";
+            msg += `• ${i.unidades} pza(s) - ${i.desc} (${i.marca})\n`;
         });
 
         const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
         
-        // Pequeña pausa para asegurar que el fetch se dispare antes de abrir WhatsApp
+        // Pequeña espera para asegurar que el guardado en Sheets se inicie
         setTimeout(() => {
             window.open(urlWA, '_blank');
-        }, 100);
+        }, 500);
     }
 if ('serviceWorker' in navigator) {
     // El punto delante de la barra es clave en GitHub Pages
