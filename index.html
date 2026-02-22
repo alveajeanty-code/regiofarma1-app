@@ -217,14 +217,12 @@
         const fecha = document.getElementById('fecha_entrega').value;
 
         if (!cliente || carrito.length === 0) {
-            alert("FALTAN DATOS O LA LISTA ESTÁ VACÍA");
+            alert("FALTEN DADES O LA LLISTA ESTÀ BUIDA");
             return;
         }
 
-        // --- GENERACIÓN DEL FOLIO INTELIGENTE ---
-        // Extraemos las iniciales del nombre del cliente
-        const iniciales = cliente.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 3);
-        
+        // --- GENERACIÓ DEL FOLIO AMB INICIALS ---
+        const iniciales = cliente.trim().split(/\s+/).map(n => n[0]).join('').toUpperCase().substring(0, 3);
         const ahora = new Date();
         const codigoPedido = "RF-" + iniciales + "-" + 
                             ahora.getFullYear() + 
@@ -233,9 +231,9 @@
                             ahora.getHours().toString().padStart(2, '0') + 
                             ahora.getMinutes().toString().padStart(2, '0');
 
-        // Estructura para Google Sheets
+        // Estructura de dades per a Google Sheets
         const datosParaSheet = {
-            idPedido: codigoPedido, 
+            idPedido: codigoPedido, // Aquest nom ha de ser igual al de l'script
             cliente: cliente,
             tel: tel,
             dir: dir,
@@ -244,20 +242,22 @@
             productos: carrito 
         };
 
-        // Envío a Google
-        fetch(URL_GOOGLE_SHEETS, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(datosParaSheet)
-        });
+        // Enviament a Google Sheets
+        try {
+            fetch(URL_GOOGLE_SHEETS, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(datosParaSheet)
+            });
+        } catch (e) {
+            console.error("Error enviant a Sheets", e);
+        }
 
-        // --- WHATSAPP CON FOLIO ---
+        // --- WHATSAPP ---
         let msg = `🚀 *PEDIDO: ${codigoPedido}*\n`;
         msg += "--------------------------\n";
         msg += `*CLIENTE:* ${cliente}\n`;
-        msg += `*PAGO:* ${pago}\n`;
         msg += "--------------------------\n";
-        msg += "*DETALLE DEL PEDIDO:*\n";
 
         carrito.forEach((i, idx) => {
             msg += `\n📦 *ITEM ${idx+1}:*\n`;
