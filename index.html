@@ -33,7 +33,7 @@
         <div class="logo-container">
             <img src="logo_regiofarma.png" alt="Regiofarma Distribuidora" class="img-logo" onerror="this.src='https://via.placeholder.com/300x80?text=REGIOFARMA+DISTRIBUIDORA'">
         </div>
-        <small style="letter-spacing: 2px; color: var(--azul); font-weight: bold; display: block; margin-top: 5px;">SISTEMA DE CAPTURA</small>
+        <small style="letter-spacing: 2px; color: var(--azul); font-weight: bold; display: block; margin-top: 5px;">SISTEMA DE CAPTURA DE PEDIDOS</small>
     </header>
 
     <h3>1. Datos de Venta y Entrega</h3>
@@ -191,15 +191,17 @@
         msg += "LISTADO:\n\n";
 
         carrito.forEach(i => {
-            msg += i.unidades + ";" + i.desc + ";" + i.pres + ";" + i.marca + "\n";
+            msg += i.unidades + " | " + i.desc + " | " + i.pres + " | " + i.marca + "\n";
         });
 
         const url = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
         window.open(url, '_blank');
     }
-// Registrar el Service Worker para que sea instalable
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+    // El punto delante de la barra es clave en GitHub Pages
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Registro de SW exitoso', reg))
+      .catch(err => console.warn('Error al registrar SW', err));
 }
 </script>
 
