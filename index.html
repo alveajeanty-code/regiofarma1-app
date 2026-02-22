@@ -168,7 +168,7 @@
         }
     }
 
-    function enviar() {
+async function enviar() {
         const cliente = document.getElementById('nombre').value;
         const tel = document.getElementById('tel_cliente').value;
         const dir = document.getElementById('direccion').value;
@@ -180,6 +180,30 @@
             return;
         }
 
+        // --- PARTE 1: GUARDAR EN GOOGLE SHEETS ---
+        // Preparamos un resumen del pedido para la columna de la hoja
+        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} [${i.marca}]`).join(" / ");
+
+        const urlScript = "TU_URL_DE_GOOGLE_AQUI"; // <--- PEGA TU URL AQUÍ
+
+        const datosParaSheet = {
+            cliente: cliente,
+            tel: tel,
+            dir: dir,
+            fecha: fecha,
+            pago: pago,
+            pedido: resumenPedido
+        };
+
+        // Enviamos a Google Sheets en segundo plano
+        fetch(urlScript, {
+            method: 'POST',
+            mode: 'no-cors', // Importante para Google Scripts
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosParaSheet)
+        });
+
+        // --- PARTE 2: ENVIAR POR WHATSAPP ---
         let msg = "NUEVO PEDIDO - REGIOFARMA\n";
         msg += "--------------------------\n";
         msg += "CLIENTE: " + cliente + "\n";
@@ -194,8 +218,12 @@
             msg += i.unidades + " | " + i.desc + " | " + i.pres + " | " + i.marca + "\n";
         });
 
-        const url = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
-        window.open(url, '_blank');
+        const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
+        
+        // Pequeña pausa para asegurar que el fetch se dispare antes de abrir WhatsApp
+        setTimeout(() => {
+            window.open(urlWA, '_blank');
+        }, 100);
     }
 if ('serviceWorker' in navigator) {
     // El punto delante de la barra es clave en GitHub Pages
