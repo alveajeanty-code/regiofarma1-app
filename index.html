@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regiofarma - Captura Pro</title>
     <style>
-        :root { --azul: #0099ff; --rojo: #ff0000; --oscuro: #1a1a1a; --gris: #7f8c8d; }
+        :root { --azul: #0099ff; --rojo: #ff0000; --oscuro: #1a1a1a; --gris: #7f8c8d; --verde: #28a745; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
         .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         header { text-align: center; margin-bottom: 25px; }
@@ -16,25 +16,14 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 15px; }
         .flex-row { display: flex; gap: 10px; }
         .flex-row div { flex: 1; }
-        .btn-add { background: var(--oscuro); color: white; font-weight: bold; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
+        .btn-add { background: var(--verde); color: white; font-weight: bold; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
         .btn-send { background: var(--azul); color: white; font-weight: bold; font-size: 18px; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,153,255,0.3); }
         .btn-reset { background: var(--gris); color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
         .btn-del { color: var(--rojo); border: none; background: none; font-weight: bold; cursor: pointer; }
-        
-        #nombre {
-        text-transform: uppercase;
-        }
-
-        /* Opcional: Si quieres que el marcador de posición también se vea en mayúsculas */
-        #nombre::placeholder {
-            text-transform: uppercase;
-        }
-        #nombre, #desc {
-            text-transform: uppercase;
-        }
+        #nombre, #desc, #marca { text-transform: uppercase; }
     </style>
     <link rel="manifest" href="manifest.json">
 </head>
@@ -50,7 +39,7 @@
 
     <h3>1. Datos de Venta y Entrega</h3>
     <label>Nombre del Cliente:</label>
-    <input type="text" id="nombre" placeholder="Nombre o Razon Social" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '').toUpperCase()">
+    <input type="text" id="nombre" placeholder="NOMBRE O RAZÓN SOCIAL" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '').toUpperCase()">
     
     <div class="flex-row">
         <div>
@@ -63,164 +52,155 @@
         </div>
     </div>
 
-    <div class="flex-row">
-        <div>
-            <label>Método de Pago:</label>
-            <select id="metodoPago">
-                <option value="Transferencia">Transferencia</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Crédito">Crédito</option>
-            </select>
-        </div>
-    </div>
+    <label>Método de Pago:</label>
+    <select id="metodoPago">
+        <option value="Transferencia">Transferencia</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Crédito">Crédito</option>
+    </select>
     
     <label>Dirección:</label>
-    <textarea id="direccion" placeholder="Calle, Número, Colonia..."></textarea>
+    <textarea id="direccion" placeholder="CALLE, NÚMERO, COLONIA..."></textarea>
 
-    <h3>2. Registro de Insumos</h3>
-    <label>Descripción del Producto:</label>
-    <input type="text" id="desc" placeholder="EJ: JERINGA 5ML O SOLUCIÓN 0.9." oninput="this.value = this.value.replace(/[^a-zA-Z0-9.\s]/g, '').toUpperCase()">
-    <div class="flex-row">
-        <div>
-            <label>Presentación:</label>
-            <select id="pres">
-                <option value="Pieza">Pieza</option>
-                <option value="Envase">Envase</option>
-                <option value="Frasco">Frasco</option>
-                <option value="Caja">Caja</option>
-                <option value="Otro">Otro</option>
-            </select>
+    <div id="registro-insumos" style="background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+        <h3>2. Registro de Insumos</h3>
+        <label>Cantidad:</label>
+        <input type="number" id="unidades" placeholder="0">
+        
+        <label>Descripción del Producto:</label>
+        <input type="text" id="desc" placeholder="EJ: PARACETAMOL 500MG" oninput="this.value = this.value.replace(/[^a-zA-Z0-9.\s]/g, '').toUpperCase()">
+        
+        <label>Marca / Laboratorio:</label>
+        <input type="text" id="marca" placeholder="OPCIONAL" oninput="this.value = this.value.toUpperCase()">
+    
+        <div style="margin: 10px 0; padding: 10px; border: 1px dashed var(--azul); border-radius: 8px; background: white;">
+            <label style="font-size: 10px;">Foto Receta/Producto (Opcional):</label>
+            <input type="file" id="foto" accept="image/*" capture="camera">
+            <p id="status-foto" style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">Cámara o Galería</p>
         </div>
-        <div>
-            <label>Unidades:</label>
-            <input type="number" id="unidades" value="1" min="1">
-        </div>
+
+        <button type="button" class="btn-add" onclick="agregarConFoto()">+ AÑADIR A LA LISTA</button>
     </div>
-
-    <label>Marca:</label>
-    <input type="text" id="marca" placeholder="Opcional Marca o Laboratrio">
-
-    <button type="button" class="btn-add" onclick="agregar()">+ AGREGAR A LA LISTA</button>
 
     <table>
         <thead>
             <tr>
                 <th>Cant</th>
                 <th>Producto</th>
-                <th>Pres.</th>
+                <th>Foto</th>
                 <th></th>
             </tr>
         </thead>
         <tbody id="tablaCuerpo"></tbody>
     </table>
-    <label>Foto de Receta o Producto (Opcional):</label>
-    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed var(--azul); text-align: center;">
-        <input type="file" id="foto" accept="image/*" capture="camera" style="font-size: 12px;">
-        <p id="status-foto" style="font-size: 11px; color: var(--gris); margin-top: 5px;">Puedes tomar una foto o elegir de la galería</p>
-    </div>
 
-    <button type="button" class="btn-send" onclick="enviar()">ENVIAR PEDIDO POR WHATSAPP</button>
-    <button type="button" class="btn-reset" onclick="nuevoPedido()">BORRAR TODO</button>
+    <button type="button" class="btn-send" onclick="enviar()">ENVIAR PEDIDO COMPLETO</button>
+    <button type="button" class="btn-reset" onclick="nuevoPedido()">LIMPIAR TODO</button>
 </div>
 
 <script>
     let carrito = [];
-    const MI_TELEFONO = "528119939771"; 
+    const MI_TELEFONO = "528119939771";
+    const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwCkgCf6Z4wf1tIc4HuU3KcK5wQhtwmF9BOTFP1xNCYA1nDqSGI4C0_8Czs5hxLSfG_BA/exec"; 
+    const API_KEY_IMGBB = "691c99ca91538f67d4731f19c6a864b3"; 
 
-    // Al cargar la página, poner la fecha de hoy
     window.onload = function() {
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_entrega').value = hoy;
     }
 
-    function agregar() {
-        const descInput = document.getElementById('desc');
-        const presInput = document.getElementById('pres');
-        const unidadesInput = document.getElementById('unidades');
-        const marcaInput = document.getElementById('marca');
-
-        if (!descInput.value) { 
-            alert("Indique la descripción del producto"); 
-            return; 
-        }
-
-        // Agregar al carrito
-        carrito.push({ 
-            desc: descInput.value, 
-            pres: presInput.value, 
-            unidades: unidadesInput.value, 
-            marca: marcaInput.value || "N/A" 
-        });
-
-        // Limpiar campos de captura
-        descInput.value = "";
-        marcaInput.value = "";
-        unidadesInput.value = 1;
-
-        actualizarTabla();
-    }
-
-    function actualizarTabla() {
-        const tabla = document.getElementById('tablaCuerpo');
-        tabla.innerHTML = "";
-        carrito.forEach((item, index) => {
-            tabla.innerHTML += `<tr>
-                <td>${item.unidades}</td>
-                <td><strong>${item.desc}</strong><br><small>${item.marca}</small></td>
-                <td>${item.pres}</td>
-                <td><button class="btn-del" onclick="eliminar(${index})">✕</button></td>
-            </tr>`;
-        });
-    }
-
-    function eliminar(id) {
-        carrito.splice(id, 1);
-        actualizarTabla();
-    }
-
-    function nuevoPedido() {
-        if(confirm("¿Limpiar todo el formulario?")) { 
-            location.reload(); 
-        }
-    }
-
-// --- FUNCIÓN PARA SUBIR FOTO A IMGBB ---
-    async function subirFoto() {
+    async function subirFotoIndividual() {
         const fileInput = document.getElementById('foto');
-        if (fileInput.files.length === 0) return "No se adjuntó foto";
+        if (fileInput.files.length === 0) return "Sin foto";
 
         const statusMsg = document.getElementById('status-foto');
-        statusMsg.innerText = "⏳ SUBIENDO IMAGEN... ESPERA.";
+        statusMsg.innerText = "⏳ SUBIENDO FOTO...";
         statusMsg.style.color = "orange";
 
-        // REEMPLAZA ESTO CON TU LLAVE REAL DE IMGBB
-        const API_KEY = "691c99ca91538f67d4731f19c6a864b3"; 
-        
         const formData = new FormData();
         formData.append("image", fileInput.files[0]);
 
         try {
-            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY_IMGBB}`, {
                 method: "POST",
                 body: formData
             });
             const result = await response.json();
-            
             if(result.success) {
                 statusMsg.innerText = "✅ FOTO LISTA";
                 statusMsg.style.color = "green";
                 return result.data.url;
-            } else {
-                return "Error en subida";
             }
         } catch (error) {
-            console.error("Error:", error);
-            statusMsg.innerText = "❌ ERROR DE CONEXIÓN";
-            return "Error de red";
+            statusMsg.innerText = "❌ ERROR AL SUBIR";
+            return "Error";
+        }
+        return "Sin foto";
+    }
+
+    async function agregarConFoto() {
+        const desc = document.getElementById('desc').value;
+        const unidades = document.getElementById('unidades').value;
+        const marca = document.getElementById('marca').value || "S/M";
+
+        if (!desc || !unidades) {
+            alert("POR FAVOR LLENA DESCRIPCIÓN Y UNIDADES");
+            return;
+        }
+
+        const linkFoto = await subirFotoIndividual();
+
+        carrito.push({
+            unidades: unidades,
+            desc: desc,
+            marca: marca,
+            foto: linkFoto
+        });
+
+        actualizarTabla();
+
+        // Limpiar campos
+        document.getElementById('desc').value = "";
+        document.getElementById('unidades').value = "";
+        document.getElementById('marca').value = "";
+        document.getElementById('foto').value = "";
+        document.getElementById('status-foto').innerText = "Cámara o Galería";
+        document.getElementById('status-foto').style.color = "#666";
+
+        if (confirm("¿DESEAS AGREGAR OTRO PRODUCTO?")) {
+            document.getElementById('unidades').focus();
         }
     }
 
-    // --- FUNCIÓN ENVIAR MEJORADA ---
+    function actualizarTabla() {
+        const cuerpo = document.getElementById('tablaCuerpo');
+        cuerpo.innerHTML = "";
+        carrito.forEach((item, index) => {
+            const fotoIcono = item.foto.includes("http") ? "✅" : "❌";
+            cuerpo.innerHTML += `
+                <tr>
+                    <td>${item.unidades}</td>
+                    <td>${item.desc}<br><small>${item.marca}</small></td>
+                    <td>${fotoIcono}</td>
+                    <td><button class="btn-del" onclick="eliminar(${index})">X</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function eliminar(index) {
+        carrito.splice(index, 1);
+        actualizarTabla();
+    }
+
+    function nuevoPedido() {
+        if(confirm("¿BORRAR TODO EL PEDIDO ACTUAL?")) {
+            carrito = [];
+            actualizarTabla();
+            document.getElementById('nombre').value = "";
+        }
+    }
+
     async function enviar() {
         const cliente = document.getElementById('nombre').value;
         const tel = document.getElementById('tel_cliente').value;
@@ -229,18 +209,11 @@
         const fecha = document.getElementById('fecha_entrega').value;
 
         if (!cliente || carrito.length === 0) {
-            alert("FALTAN DATOS CRÍTICOS (CLIENTE O PRODUCTOS)");
+            alert("FALTAN DATOS O LA LISTA ESTÁ VACÍA");
             return;
         }
 
-        // 1. Subir foto (si hay una seleccionada)
-        const linkFoto = await subirFoto();
-
-        // 2. Preparar datos para Google Sheets
-        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} [${i.marca}]`).join(" / ");
-        
-        // REEMPLAZA CON TU URL DE GOOGLE APPS SCRIPT
-        const urlScript = "https://script.google.com/macros/s/AKfycbwCkgCf6Z4wf1tIc4HuU3KcK5wQhtwmF9BOTFP1xNCYA1nDqSGI4C0_8Czs5hxLSfG_BA/exec"; 
+        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} (${i.marca}) [Foto: ${i.foto}]`).join(" / ");
 
         const datosParaSheet = {
             cliente: cliente,
@@ -248,47 +221,35 @@
             dir: dir,
             fecha: fecha,
             pago: pago,
-            pedido: resumenPedido + " | LINK FOTO: " + linkFoto
+            pedido: resumenPedido
         };
 
-        fetch(urlScript, {
+        fetch(URL_GOOGLE_SHEETS, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datosParaSheet)
         });
 
-        // 3. Preparar mensaje de WhatsApp
         let msg = "🚀 *NUEVO PEDIDO - REGIOFARMA*\n";
         msg += "--------------------------\n";
-        msg += "*CLIENTE:* " + cliente + "\n";
-        msg += "*FECHA:* " + fecha + "\n";
-        msg += "*PAGO:* " + pago + "\n";
-        
-        if (linkFoto.includes("http")) {
-            msg += "*📸 FOTO RECETA:* " + linkFoto + "\n";
-        }
-        
+        msg += `*CLIENTE:* ${cliente}\n`;
+        msg += `*PAGO:* ${pago}\n`;
+        msg += `*ENTREGA:* ${fecha}\n`;
         msg += "--------------------------\n";
-        msg += "*DETALLE:* \n";
+        msg += "*PRODUCTOS:*\n";
 
-        carrito.forEach(i => {
-            msg += `• ${i.unidades} pza(s) - ${i.desc} (${i.marca})\n`;
+        carrito.forEach((i, idx) => {
+            msg += `\n${idx+1}. ${i.unidades} pza(s) - ${i.desc} (${i.marca})`;
+            if(i.foto.startsWith("http")) msg += `\n   🔗 Ver foto: ${i.foto}`;
         });
 
         const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
-        
-        // Pequeña espera para asegurar que el guardado en Sheets se inicie
-        setTimeout(() => {
-            window.open(urlWA, '_blank');
-        }, 500);
+        window.open(urlWA, '_blank');
     }
-if ('serviceWorker' in navigator) {
-    // El punto delante de la barra es clave en GitHub Pages
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Registro de SW exitoso', reg))
-      .catch(err => console.warn('Error al registrar SW', err));
-}
-</script>
 
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Error SW', err));
+    }
+</script>
 </body>
 </html>
