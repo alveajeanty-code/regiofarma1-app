@@ -105,7 +105,7 @@
     </table>
 
     <button type="button" class="btn-send" onclick="enviar()">ENVIAR PEDIDO COMPLETO</button>
-    <button type="button" class="btn-reset" onclick="nuevoPedido()">LIMPIAR TODO</button>
+    <button type="button" class="btn-reset" onclick="nuevoPedido()">BORRAR TODO</button>
 </div>
 
 <script>
@@ -118,7 +118,40 @@
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_entrega').value = hoy;
     }
+    function nuevoPedido() {
+        if (confirm("¿ESTÁS SEGURO DE QUE DESEAS BORRAR TODO EL PEDIDO ACTUAL Y COMENZAR DE NUEVO?")) {
+            // 1. Vaciar el arreglo del carrito
+            carrito = [];
 
+            // 2. Limpiar los campos del Cliente
+            document.getElementById('nombre').value = "";
+            document.getElementById('tel_cliente').value = "";
+            document.getElementById('direccion').value = "";
+            // Opcional: resetear método de pago al primero
+            document.getElementById('metodoPago').selectedIndex = 0;
+
+            // 3. Limpiar los campos de Insumos
+            document.getElementById('unidades').value = "";
+            document.getElementById('desc').value = "";
+            document.getElementById('marca').value = "";
+            document.getElementById('foto').value = "";
+            
+            // 4. Limpiar mensajes de estado
+            const statusFoto = document.getElementById('status-foto');
+            if (statusFoto) {
+                statusFoto.innerText = "Cámara o Galería";
+                statusFoto.style.color = "#666";
+            }
+
+            // 5. Actualizar la tabla para que se vea vacía
+            actualizarTabla();
+
+            // 6. Regresar el cursor al inicio
+            document.getElementById('nombre').focus();
+            
+            alert("SISTEMA REINICIADO: LISTO PARA NUEVO PEDIDO");
+        }
+    }
     async function subirFotoIndividual() {
         const fileInput = document.getElementById('foto');
         if (fileInput.files.length === 0) return "Sin foto";
@@ -267,6 +300,11 @@
 
         const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
         window.open(urlWA, '_blank');
+        setTimeout(() => {
+            if(confirm("¿EL PEDIDO SE ENVIÓ CORRECTAMENTE? ¿DESEAS LIMPIAR EL FORMULARIO PARA OTRO CLIENTE?")) {
+                nuevoPedido();
+            }
+        }, 2000);       
     }
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Error SW', err));
