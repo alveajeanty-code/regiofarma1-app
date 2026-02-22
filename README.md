@@ -1,2 +1,2 @@
 # regiofarma1-app
-Aplicacion par toma de pedidos
+Aplicacion para la toma de pedidos
