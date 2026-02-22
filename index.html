@@ -184,7 +184,7 @@ async function enviar() {
         // Preparamos un resumen del pedido para la columna de la hoja
         let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} [${i.marca}]`).join(" / ");
 
-        const urlScript = "https://script.google.com/macros/s/AKfycbyyk-L6vKf6KgQI0BRIZ2CMiaEeaOY_rojxs2fAbVrgRc610L7KBIJsrTDP2AwR3Y3zTg/execQUI"; // <--- PEGA TU URL AQUÍ
+        const urlScript = "https://script.google.com/macros/s/AKfycbxa6o8NwxddJFddo08kM01-qfGEazlEbWoebZDQnW1z1qpapDoPn18MRDmIK5qRhzqzuw/exec"; // <--- PEGA TU URL AQUÍ
 
         const datosParaSheet = {
             cliente: cliente,
