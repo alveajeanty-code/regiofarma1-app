@@ -70,6 +70,16 @@
         <label>Descripción del Producto:</label>
         <input type="text" id="desc" placeholder="EJ: PARACETAMOL 500MG" oninput="this.value = this.value.replace(/[^a-zA-Z0-9.\s]/g, '').toUpperCase()">
         
+        <label>Presentación:</label>
+        <select id="presentacion">
+            <option value="PIEZA">PIEZA</option>
+            <option value="CAJA">CAJA</option>
+            <option value="ENVASE">ENVASE</option>
+            <option value="FRASCO">FRASCO</option>
+            <option value="BULTO">BULTO</option>
+            <option value="OTRO">OTRO</option>
+        </select>
+        
         <label>Marca / Laboratorio:</label>
         <input type="text" id="marca" placeholder="OPCIONAL" oninput="this.value = this.value.toUpperCase()">
     
@@ -138,10 +148,12 @@
         return "Sin foto";
     }
 
+    // Añadir al carrito con Presentación
     async function agregarConFoto() {
         const desc = document.getElementById('desc').value;
         const unidades = document.getElementById('unidades').value;
         const marca = document.getElementById('marca').value || "S/M";
+        const pres = document.getElementById('presentacion').value; // Asegúrate de tener este ID en el select
 
         if (!desc || !unidades) {
             alert("POR FAVOR LLENA DESCRIPCIÓN Y UNIDADES");
@@ -154,24 +166,25 @@
             unidades: unidades,
             desc: desc,
             marca: marca,
+            presentacion: pres,
             foto: linkFoto
         });
 
         actualizarTabla();
 
-        // Limpiar campos
+        // Limpiar campos de insumo
         document.getElementById('desc').value = "";
         document.getElementById('unidades').value = "";
         document.getElementById('marca').value = "";
         document.getElementById('foto').value = "";
         document.getElementById('status-foto').innerText = "Cámara o Galería";
-        document.getElementById('status-foto').style.color = "#666";
 
         if (confirm("¿DESEAS AGREGAR OTRO PRODUCTO?")) {
             document.getElementById('unidades').focus();
         }
     }
 
+    // Tabla con botón de eliminar
     function actualizarTabla() {
         const cuerpo = document.getElementById('tablaCuerpo');
         cuerpo.innerHTML = "";
@@ -180,7 +193,7 @@
             cuerpo.innerHTML += `
                 <tr>
                     <td>${item.unidades}</td>
-                    <td>${item.desc}<br><small>${item.marca}</small></td>
+                    <td>${item.desc}<br><small>${item.presentacion} | ${item.marca}</small></td>
                     <td>${fotoIcono}</td>
                     <td><button class="btn-del" onclick="eliminar(${index})">X</button></td>
                 </tr>
@@ -189,18 +202,13 @@
     }
 
     function eliminar(index) {
-        carrito.splice(index, 1);
-        actualizarTabla();
-    }
-
-    function nuevoPedido() {
-        if(confirm("¿BORRAR TODO EL PEDIDO ACTUAL?")) {
-            carrito = [];
+        if(confirm("¿Eliminar este producto de la lista?")) {
+            carrito.splice(index, 1);
             actualizarTabla();
-            document.getElementById('nombre').value = "";
         }
     }
 
+    // Enviar datos desglosados
     async function enviar() {
         const cliente = document.getElementById('nombre').value;
         const tel = document.getElementById('tel_cliente').value;
@@ -213,15 +221,13 @@
             return;
         }
 
-        let resumenPedido = carrito.map(i => `${i.unidades} ${i.desc} (${i.marca}) [Foto: ${i.foto}]`).join(" / ");
-
         const datosParaSheet = {
             cliente: cliente,
             tel: tel,
             dir: dir,
-            fecha: fecha,
+            fechaEntrega: fecha,
             pago: pago,
-            pedido: resumenPedido
+            productos: carrito // Enviamos el array para que el script lo desglose
         };
 
         fetch(URL_GOOGLE_SHEETS, {
@@ -230,23 +236,22 @@
             body: JSON.stringify(datosParaSheet)
         });
 
+        // WhatsApp resumen
         let msg = "🚀 *NUEVO PEDIDO - REGIOFARMA*\n";
         msg += "--------------------------\n";
         msg += `*CLIENTE:* ${cliente}\n`;
-        msg += `*PAGO:* ${pago}\n`;
-        msg += `*ENTREGA:* ${fecha}\n`;
         msg += "--------------------------\n";
-        msg += "*PRODUCTOS:*\n";
 
         carrito.forEach((i, idx) => {
-            msg += `\n${idx+1}. ${i.unidades} pza(s) - ${i.desc} (${i.marca})`;
-            if(i.foto.startsWith("http")) msg += `\n   🔗 Ver foto: ${i.foto}`;
+            msg += `\n📦 *ITEM ${idx+1}:*\n`;
+            msg += `• CANT: ${i.unidades} ${i.presentacion}\n`;
+            msg += `• PROD: ${i.desc} (${i.marca})\n`;
+            if(i.foto.startsWith("http")) msg += `🔗 FOTO: ${i.foto}\n`;
         });
 
         const urlWA = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
         window.open(urlWA, '_blank');
     }
-
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Error SW', err));
     }
