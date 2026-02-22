@@ -1,0 +1,16 @@
+{
+  "name": "Regiofarma Pedidos",
+  "short_name": "Regiofarma",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0099ff",
+  "icons": [
+    {
+      "src": "logo_regiofarma.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

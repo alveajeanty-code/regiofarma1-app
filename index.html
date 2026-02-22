@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regiofarma - Captura Pro</title>
+    <style>
+        :root { --azul: #0099ff; --rojo: #ff0000; --oscuro: #1a1a1a; --gris: #7f8c8d; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        header { text-align: center; margin-bottom: 25px; }
+        .logo-container { padding: 10px; border-bottom: 4px solid var(--azul); }
+        .img-logo { max-width: 100%; height: auto; max-height: 100px; }
+        h3 { font-size: 15px; color: var(--azul); text-transform: uppercase; margin-bottom: 10px; border-left: 4px solid var(--rojo); padding-left: 10px; margin-top: 20px; }
+        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-top: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 15px; }
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row div { flex: 1; }
+        .btn-add { background: var(--oscuro); color: white; font-weight: bold; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
+        .btn-send { background: var(--azul); color: white; font-weight: bold; font-size: 18px; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,153,255,0.3); }
+        .btn-reset { background: var(--gris); color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-del { color: var(--rojo); border: none; background: none; font-weight: bold; cursor: pointer; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-container">
+            <img src="logo_regiofarma.png" alt="Regiofarma Distribuidora" class="img-logo" onerror="this.src='https://via.placeholder.com/300x80?text=REGIOFARMA+DISTRIBUIDORA'">
+        </div>
+        <small style="letter-spacing: 2px; color: var(--azul); font-weight: bold; display: block; margin-top: 5px;">SISTEMA DE CAPTURA</small>
+    </header>
+
+    <h3>1. Datos de Venta y Entrega</h3>
+    <label>Nombre del Cliente:</label>
+    <input type="text" id="nombre" placeholder="Nombre o Razón Social">
+    
+    <div class="flex-row">
+        <div>
+            <label>Teléfono:</label>
+            <input type="tel" id="tel_cliente" placeholder="811-000-0000">
+        </div>
+        <div>
+            <label>Fecha de Entrega:</label>
+            <input type="date" id="fecha_entrega">
+        </div>
+    </div>
+
+    <div class="flex-row">
+        <div>
+            <label>Método de Pago:</label>
+            <select id="metodoPago">
+                <option value="Transferencia">Transferencia</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Crédito">Crédito</option>
+            </select>
+        </div>
+    </div>
+    
+    <label>Dirección:</label>
+    <textarea id="direccion" placeholder="Calle, Número, Colonia..."></textarea>
+
+    <h3>2. Registro de Insumos</h3>
+    <label>Descripción del Producto:</label>
+    <input type="text" id="desc" placeholder="Ej: IBUPROFENO 800mg. con 10 Tabletas">
+
+    <div class="flex-row">
+        <div>
+            <label>Presentación:</label>
+            <select id="pres">
+                <option value="Pieza">Pieza</option>
+                <option value="Envase">Envase</option>
+                <option value="Frasco">Frasco</option>
+                <option value="Caja">Caja</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div>
+            <label>Unidades:</label>
+            <input type="number" id="unidades" value="1" min="1">
+        </div>
+    </div>
+
+    <label>Marca:</label>
+    <input type="text" id="marca" placeholder="Opcional">
+
+    <button type="button" class="btn-add" onclick="agregar()">+ AGREGAR A LA LISTA</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Cant</th>
+                <th>Producto</th>
+                <th>Pres.</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="tablaCuerpo"></tbody>
+    </table>
+
+    <button type="button" class="btn-send" onclick="enviar()">ENVIAR PEDIDO POR WHATSAPP</button>
+    <button type="button" class="btn-reset" onclick="nuevoPedido()">BORRAR TODO</button>
+</div>
+
+<script>
+    let carrito = [];
+    const MI_TELEFONO = "528119939771"; 
+
+    // Al cargar la página, poner la fecha de hoy
+    window.onload = function() {
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha_entrega').value = hoy;
+    }
+
+    function agregar() {
+        const descInput = document.getElementById('desc');
+        const presInput = document.getElementById('pres');
+        const unidadesInput = document.getElementById('unidades');
+        const marcaInput = document.getElementById('marca');
+
+        if (!descInput.value) { 
+            alert("Indique la descripción del producto"); 
+            return; 
+        }
+
+        // Agregar al carrito
+        carrito.push({ 
+            desc: descInput.value, 
+            pres: presInput.value, 
+            unidades: unidadesInput.value, 
+            marca: marcaInput.value || "N/A" 
+        });
+
+        // Limpiar campos de captura
+        descInput.value = "";
+        marcaInput.value = "";
+        unidadesInput.value = 1;
+
+        actualizarTabla();
+    }
+
+    function actualizarTabla() {
+        const tabla = document.getElementById('tablaCuerpo');
+        tabla.innerHTML = "";
+        carrito.forEach((item, index) => {
+            tabla.innerHTML += `<tr>
+                <td>${item.unidades}</td>
+                <td><strong>${item.desc}</strong><br><small>${item.marca}</small></td>
+                <td>${item.pres}</td>
+                <td><button class="btn-del" onclick="eliminar(${index})">✕</button></td>
+            </tr>`;
+        });
+    }
+
+    function eliminar(id) {
+        carrito.splice(id, 1);
+        actualizarTabla();
+    }
+
+    function nuevoPedido() {
+        if(confirm("¿Limpiar todo el formulario?")) { 
+            location.reload(); 
+        }
+    }
+
+    function enviar() {
+        const cliente = document.getElementById('nombre').value;
+        const tel = document.getElementById('tel_cliente').value;
+        const dir = document.getElementById('direccion').value;
+        const pago = document.getElementById('metodoPago').value;
+        const fecha = document.getElementById('fecha_entrega').value;
+
+        if (!cliente || carrito.length === 0) {
+            alert("Faltan datos críticos (Nombre del Cliente o Productos en la lista)");
+            return;
+        }
+
+        let msg = "NUEVO PEDIDO - REGIOFARMA\n";
+        msg += "--------------------------\n";
+        msg += "CLIENTE: " + cliente + "\n";
+        msg += "TEL: " + tel + "\n";
+        msg += "DIR: " + dir + "\n";
+        msg += "ENTREGA: " + fecha + "\n";
+        msg += "PAGO: " + pago + "\n";
+        msg += "--------------------------\n";
+        msg += "LISTADO:\n\n";
+
+        carrito.forEach(i => {
+            msg += i.unidades + ";" + i.desc + ";" + i.pres + ";" + i.marca + "\n";
+        });
+
+        const url = "https://wa.me/" + MI_TELEFONO + "?text=" + encodeURIComponent(msg);
+        window.open(url, '_blank');
+    }
+// Registrar el Service Worker para que sea instalable
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
