@@ -32,6 +32,9 @@
         #nombre::placeholder {
             text-transform: uppercase;
         }
+        #nombre, #desc {
+            text-transform: uppercase;
+        }
     </style>
     <link rel="manifest" href="manifest.json">
 </head>
@@ -76,8 +79,7 @@
 
     <h3>2. Registro de Insumos</h3>
     <label>Descripción del Producto:</label>
-    <input type="text" id="desc" placeholder="Ej: IBUPROFENO 800mg. con 10 Tabletas" oninput="this.value = this.value.toUpperCase()">
-
+    <input type="text" id="desc" placeholder="EJ: JERINGA 5ML O SOLUCIÓN 0.9." oninput="this.value = this.value.replace(/[^a-zA-Z0-9.\s]/g, '').toUpperCase()">
     <div class="flex-row">
         <div>
             <label>Presentación:</label>
